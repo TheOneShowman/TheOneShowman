@@ -4,4 +4,5 @@ function downloadData() {
   var enddate = document.getElementByID("startdate").value;
   alert(startdate);
   alert(enddate);
-}
+fetch("https://compute.samford.edu/zohauth/clients/data");
+      }
