@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Stats Viewer</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      h1 {
+        color: red;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      table, th, td {
+        border: 1px solid black;
+      }
+      th {
+        cursor: pointer;
+        background-color: lightgray;
+        padding: 10px;
+      }
+      th.sorted-asc::after {
+        content: ' ▲';
+      }
+      th.sorted-desc::after {
+        content: ' ▼';
+      }
+      td {
+        padding: 10px;
+        text-align: center;
+      }
+      input {
+        margin-bottom: 10px;
+        padding: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Trackman Pitch Stats Viewer</h1>
+    <form onsubmit="filterData(event);">
+      <label>Starting date</label>
+      <input type="date" id="startdate">
+      <label>End date</label>
+      <input type="date" id="enddate">
+      <button type="submit">Filter</button>
+    </form>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">ID</th>
+          <th onclick="sortTable(1)">Speed</th>
+          <th onclick="sortTable(2)">Result</th>
+          <th onclick="sortTable(3)">Datetime</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr data-date="2023-09-20">
+          <td><a href="details.html">Pitch 12345</a></td>
+          <td>95</td>
+          <td>--</td>
+          <td>2023-09-20</td>
+        </tr>
+        <tr data-date="2023-09-21">
+          <td><a href="details.html">Pitch 12346</a></td>
+          <td>96</td>
+          <td>K</td>
+          <td>2023-09-21</td>
+        </tr>
+        <tr data-date="2023-09-22">
+          <td><a href="details.html">Pitch 12347</a></td>
+          <td>75</td>
+          <td>K</td>
+          <td>2023-09-22</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <script>
+      function filterData(event) {
+        event.preventDefault();
+        
+        var startdate = new Date(document.getElementById("startdate").value);
+        var enddate = new Date(document.getElementById("enddate").value);
+        var rows = document.querySelectorAll("#tableBody tr");
+        
+        rows.forEach(row => {
+          var rowDate = new Date(row.getAttribute("data-date"));
+          
+          if (!isNaN(startdate) && !isNaN(enddate)) {
+            if (rowDate >= startdate && rowDate <= enddate) {
+              row.style.display = "";
+            } else {
+              row.style.display = "none";
+            }
+          }
+        });
+      }
+
+      function sortTable(n) {
+        var table = document.getElementById("dataTable");
+        var rows = table.rows;
+        var switching = true;
+        var dir = "asc"; 
+        var shouldSwitch;
+        var switchCount = 0;
+        
+        // Remove sorted classes from all columns
+        for (let th of table.querySelectorAll("th")) {
+          th.classList.remove("sorted-asc", "sorted-desc");
+        }
+        
+        while (switching) {
+          switching = false;
+          var rowsArray = Array.from(rows).slice(1); // Skip the header row
+          
+          for (var i = 0; i < (rowsArray.length - 1); i++) {
+            shouldSwitch = false;
+            var x = rowsArray[i].getElementsByTagName("td")[n];
+            var y = rowsArray[i + 1].getElementsByTagName("td")[n];
+            
+            var xContent = x.textContent || x.innerText;
+            var yContent = y.textContent || y.innerText;
+            
+            if (dir == "asc") {
+              if (n === 1) { // If sorting by number (speed)
+                if (parseFloat(xContent) > parseFloat(yContent)) {
+                  shouldSwitch = true;
+                  break;
+                }
+              } else {
+                if (xContent.toLowerCase() > yContent.toLowerCase()) {
+                  shouldSwitch = true;
+                  break;
+                }
+              }
+            } else if (dir == "desc") {
+              if (n === 1) {
+                if (parseFloat(xContent) < parseFloat(yContent)) {
+                  shouldSwitch = true;
+                  break;
+                }
+              } else {
+                if (xContent.toLowerCase() < yContent.toLowerCase()) {
+                  shouldSwitch = true;
+                  break;
+                }
+              }
+            }
+          }
+          
+          if (shouldSwitch) {
+            rowsArray[i].parentNode.insertBefore(rowsArray[i + 1], rowsArray[i]);
+            switching = true;
+            switchCount++;
+          } else {
+            if (switchCount === 0 && dir === "asc") {
+              dir = "desc";
+              switching = true;
+            }
+          }
+        }
+        
+        // Add sorted class to the sorted column
+        table.querySelectorAll("th")[n].classList.add(dir === "asc" ? "sorted-asc" : "sorted-desc");
+      }
+    </script>
+  </body>
+</html>
