@@ -53,30 +53,12 @@
       <thead>
         <tr>
           <th onclick="sortTable(0)">ID</th>
-          <th onclick="sortTable(1)">Speed</th>
+          <th onclick="sortTable(1)">Speed (mph)</th>
           <th onclick="sortTable(2)">Result</th>
           <th onclick="sortTable(3)">Datetime</th>
         </tr>
       </thead>
       <tbody id="tableBody">
-        <tr data-date="2023-09-20">
-          <td><a href="details.html">Pitch 12345</a></td>
-          <td>95</td>
-          <td>--</td>
-          <td>2023-09-20</td>
-        </tr>
-        <tr data-date="2023-09-21">
-          <td><a href="details.html">Pitch 12346</a></td>
-          <td>96</td>
-          <td>K</td>
-          <td>2023-09-21</td>
-        </tr>
-        <tr data-date="2023-09-22">
-          <td><a href="details.html">Pitch 12347</a></td>
-          <td>75</td>
-          <td>K</td>
-          <td>2023-09-22</td>
-        </tr>
       </tbody>
     </table>
     
@@ -168,6 +150,33 @@
         // Add sorted class to the sorted column
         table.querySelectorAll("th")[n].classList.add(dir === "asc" ? "sorted-asc" : "sorted-desc");
       }
+
+      function generateRandomPitchData() {
+        const tableBody = document.getElementById('tableBody');
+        const results = ['K', 'BB', 'H', '--'];
+        
+        // Random data generation
+        for (let i = 1; i <= 10; i++) {
+          const randomSpeed = Math.floor(Math.random() * 30) + 70; // Speed between 70 and 100 mph
+          const randomResult = results[Math.floor(Math.random() * results.length)];
+          const randomDate = new Date(+(new Date()) - Math.floor(Math.random()*10000000000)); // Random date within the last ~115 days
+          const formattedDate = randomDate.toISOString().split('T')[0]; // Format date as YYYY-MM-DD
+          
+          // Create table row
+          const row = document.createElement('tr');
+          row.setAttribute('data-date', formattedDate);
+          row.innerHTML = `
+            <td><a href="details.html">Pitch ${i}</a></td>
+            <td>${randomSpeed}</td>
+            <td>${randomResult}</td>
+            <td>${formattedDate}</td>
+          `;
+          tableBody.appendChild(row);
+        }
+      }
+      
+      // Generate random pitch data on page load
+      window.onload = generateRandomPitchData;
     </script>
   </body>
 </html>
