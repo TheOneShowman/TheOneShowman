@@ -38,6 +38,9 @@
         margin-bottom: 10px;
         padding: 5px;
       }
+      .statistics {
+        margin-top: 20px;
+      }
     </style>
   </head>
   <body>
@@ -62,6 +65,14 @@
       </tbody>
     </table>
     
+    <div class="statistics">
+      <h3>Statistics:</h3>
+      <p><strong>Mean Speed:</strong> <span id="meanSpeed"></span></p>
+      <p><strong>Median Speed:</strong> <span id="medianSpeed"></span></p>
+      <p><strong>Mode Speed:</strong> <span id="modeSpeed"></span></p>
+      <p><strong>Mode Result:</strong> <span id="modeResult"></span></p>
+    </div>
+
     <script>
       function filterData(event) {
         event.preventDefault();
@@ -88,49 +99,38 @@
         var rows = table.rows;
         var switching = true;
         var dir = "asc"; 
-        var shouldSwitch;
         var switchCount = 0;
-        
-        // Remove sorted classes from all columns
-        for (let th of table.querySelectorAll("th")) {
-          th.classList.remove("sorted-asc", "sorted-desc");
-        }
         
         while (switching) {
           switching = false;
-          var rowsArray = Array.from(rows).slice(1); // Skip the header row
+          var rowsArray = Array.from(rows).slice(1);
           
           for (var i = 0; i < (rowsArray.length - 1); i++) {
-            shouldSwitch = false;
             var x = rowsArray[i].getElementsByTagName("td")[n];
             var y = rowsArray[i + 1].getElementsByTagName("td")[n];
-            
             var xContent = x.textContent || x.innerText;
             var yContent = y.textContent || y.innerText;
             
-            if (dir == "asc") {
-              if (n === 1) { // If sorting by number (speed)
+            var shouldSwitch = false;
+            if (dir === "asc") {
+              if (n === 1) {
                 if (parseFloat(xContent) > parseFloat(yContent)) {
                   shouldSwitch = true;
                   break;
                 }
-              } else {
-                if (xContent.toLowerCase() > yContent.toLowerCase()) {
-                  shouldSwitch = true;
-                  break;
-                }
+              } else if (xContent.toLowerCase() > yContent.toLowerCase()) {
+                shouldSwitch = true;
+                break;
               }
-            } else if (dir == "desc") {
+            } else if (dir === "desc") {
               if (n === 1) {
                 if (parseFloat(xContent) < parseFloat(yContent)) {
                   shouldSwitch = true;
                   break;
                 }
-              } else {
-                if (xContent.toLowerCase() < yContent.toLowerCase()) {
-                  shouldSwitch = true;
-                  break;
-                }
+              } else if (xContent.toLowerCase() < yContent.toLowerCase()) {
+                shouldSwitch = true;
+                break;
               }
             }
           }
@@ -139,30 +139,31 @@
             rowsArray[i].parentNode.insertBefore(rowsArray[i + 1], rowsArray[i]);
             switching = true;
             switchCount++;
-          } else {
-            if (switchCount === 0 && dir === "asc") {
-              dir = "desc";
-              switching = true;
-            }
+          } else if (switchCount === 0 && dir === "asc") {
+            dir = "desc";
+            switching = true;
           }
         }
         
-        // Add sorted class to the sorted column
-        table.querySelectorAll("th")[n].classList.add(dir === "asc" ? "sorted-asc" : "sorted-desc");
+        table.querySelectorAll("th")[n].classList.toggle("sorted-asc", dir === "asc");
+        table.querySelectorAll("th")[n].classList.toggle("sorted-desc", dir === "desc");
       }
 
       function generateRandomPitchData() {
         const tableBody = document.getElementById('tableBody');
         const results = ['K', 'BB', 'H', '--'];
+        const speeds = [];
+        const pitchResults = [];
         
-        // Random data generation
-        for (let i = 1; i <= 10; i++) {
-          const randomSpeed = Math.floor(Math.random() * 30) + 70; // Speed between 70 and 100 mph
+        for (let i = 1; i <= 100; i++) {
+          const randomSpeed = Math.floor(Math.random() * 30) + 70;
           const randomResult = results[Math.floor(Math.random() * results.length)];
-          const randomDate = new Date(+(new Date()) - Math.floor(Math.random()*10000000000)); // Random date within the last ~115 days
-          const formattedDate = randomDate.toISOString().split('T')[0]; // Format date as YYYY-MM-DD
+          const randomDate = new Date(+(new Date()) - Math.floor(Math.random()*10000000000));
+          const formattedDate = randomDate.toISOString().split('T')[0];
           
-          // Create table row
+          speeds.push(randomSpeed);
+          pitchResults.push(randomResult);
+          
           const row = document.createElement('tr');
           row.setAttribute('data-date', formattedDate);
           row.innerHTML = `
@@ -173,9 +174,46 @@
           `;
           tableBody.appendChild(row);
         }
+        
+        calculateStatistics(speeds, pitchResults);
       }
       
-      // Generate random pitch data on page load
+      function calculateStatistics(speeds, results) {
+        // Mean calculation
+        const meanSpeed = (speeds.reduce((acc, speed) => acc + speed, 0) / speeds.length).toFixed(2);
+        document.getElementById('meanSpeed').textContent = meanSpeed;
+        
+        // Median calculation
+        const sortedSpeeds = speeds.slice().sort((a, b) => a - b);
+        const mid = Math.floor(sortedSpeeds.length / 2);
+        const medianSpeed = sortedSpeeds.length % 2 !== 0 ? sortedSpeeds[mid] : ((sortedSpeeds[mid - 1] + sortedSpeeds[mid]) / 2).toFixed(2);
+        document.getElementById('medianSpeed').textContent = medianSpeed;
+        
+        // Mode calculation for speed
+        const modeSpeed = calculateMode(speeds);
+        document.getElementById('modeSpeed').textContent = modeSpeed;
+        
+        // Mode calculation for results
+        const modeResult = calculateMode(results);
+        document.getElementById('modeResult').textContent = modeResult;
+      }
+      
+      function calculateMode(arr) {
+        const frequency = {};
+        let maxFreq = 0;
+        let mode;
+        
+        arr.forEach(item => {
+          frequency[item] = (frequency[item] || 0) + 1;
+          if (frequency[item] > maxFreq) {
+            maxFreq = frequency[item];
+            mode = item;
+          }
+        });
+        
+        return mode;
+      }
+      
       window.onload = generateRandomPitchData;
     </script>
   </body>
